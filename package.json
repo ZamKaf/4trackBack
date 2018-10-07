@@ -1,0 +1,24 @@
+{
+  "name": "4trackback",
+  "version": "1.0.0",
+  "description": "Rep 4 track-mail backend project",
+  "main": "index.js",
+  "directories": {
+    "test": "tests"
+  },
+  "dependencies": {},
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ZamKaf/4trackBack.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/ZamKaf/4trackBack/issues"
+  },
+  "homepage": "https://github.com/ZamKaf/4trackBack#readme"
+}
