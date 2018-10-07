@@ -1,19 +1,21 @@
 class Item:
     """
-    Элемент двусвязного списка.
+    Элемент двусвязного списка
     """
     def __init__(self, value = None, prev = None, next = None ):
         self.value = value
-        self.next = next
-        self.prev = prev
+        self.next : Item = next
+        self.prev : Item = prev
 
     @staticmethod
     def get_item(value):
         """
-        Проверяет, является ли элемент объетом класса Item.
+        Проверяет, является ли элемент объетом класса Item
         Если да - возвращает его же, иначе - формирует новый объект с данным значением
         """
-        if type(value) is Item:
+        if value is None:
+            return None
+        elif type(value) is Item:
             return value
         else:
             return Item(value)
@@ -74,24 +76,34 @@ class DoubleLinkedList :
         self.count -= 1
         return value
 
-    def remove(self, value):
-        for item in self:
-            if item.value == value:
-                # Учитываем пограничные случаи
-                if item.prev == None:
-                    self.begin.next.prev = None
-                    self.begin = self.begin.next
-                elif item.next == None:
-                    self.end.prev.next = None
-                    self.end = self.end.prev
-                else:
-                    item.next.prev_item = item.prev
-                    item.prev_item.next = item.next
-                self.count -= 1
-                return
-        raise Exception("No such element")
+    def remove(self, *values):
+        """
+        Удаляет все элементы с такими значениями из списка
+        Если ни одного элемента с таким значением найдено небыло - бросает исключение
+        """
+        flag_removed = False
+        for value in values:
+            for item in self:
+                if item.value == value:
+                    # Учитываем пограничные случаи
+                    if item.prev is None and item.next is None:
+                        self.begin = None
+                        self.end = None
+                    elif item.prev == None:
+                        self.begin.next.prev = None
+                        self.begin = self.begin.next
+                    elif item.next == None:
+                        self.end.prev.next = None
+                        self.end = self.end.prev
+                    else:
+                        item.next.prev = item.prev
+                        item.prev.next = item.next
+                    self.count -= 1
+                    flag_removed = True
+        if not flag_removed:
+            raise Exception("No such element")
 
-    def contains(self) -> bool:
+    def contains(self, value) -> bool:
         for item in self:
             if item.value == value:
                 return True
@@ -126,6 +138,10 @@ class DoubleLinkedList :
     def end(self, value):
         self._end = value
 
+    @property
+    def is_empty(self) -> bool:
+        return self.count == 0
+
     def __next__(self) -> Item:
         if self._currentIteratorElem is None:
             self._currentIteratorElem = self.begin
@@ -142,19 +158,28 @@ class DoubleLinkedList :
             print(item.value)            
 
     def concat(self, otherList):
+        """ 
+        Конкатенция двух списков
+        В результате списки соединяются в один, и обе ссылки указывают на этот список
+        Список состорит из элементов базовых списков
+        """
         if len(otherList) == 0:
             otherList.begin = self.begin
             otherList.end = self.end
+            otherList.count = self.count
             return
         if self.count == 0:
             self.begin = otherList.begin
             self.end = otherList.end
+            self.count = otherList.count
             return
 
         self.end.next = otherList.begin
         otherList.begin.prev = self.end
         otherList.begin = self.begin
         self.end = otherList.end
+        self.count += otherList.count
+        otherList.count = self.count
 
     def __add__(self, other):
         if type(other) is DoubleLinkedList:

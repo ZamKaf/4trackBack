@@ -108,3 +108,6 @@ venv.bak/
 
 #js
 node_modules/
+
+#vs
+.vs
