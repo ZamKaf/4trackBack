@@ -1,0 +1,8 @@
+Running 30s test @ http://mysite.ru/api
+  8 threads and 200 connections
+  Thread Stats   Avg      Stdev     Max   +/- Stdev
+    Latency     5.95ms    3.77ms 187.49ms   95.37%
+    Req/Sec     4.37k   483.49     8.30k    83.71%
+  1045067 requests in 30.08s, 397.62MB read
+Requests/sec:  34746.74
+Transfer/sec:     13.22MB

@@ -1,0 +1,22 @@
+Trying 94.100.180.201...
+Connected to mail.ru.
+Escape character is '^]'.
+HTTP/1.1 302 Moved Temporarily
+Via: 1.1 MTPS
+Connection: Keep-Alive
+Proxy-Connection: Keep-Alive
+Content-Length: 161
+Date: Mon, 12 Nov 2018 21:16:48 GMT
+Location: https://mail.ru/robots.txt
+Content-Type: text/html
+Server: nginx/1.10.3
+X-XSS-Protection: 1; mode=block; report=https://cspreport.mail.ru/xxssprotection
+X-Content-Type-Options: nosniff
+
+<html>
+<head><title>302 Found</title></head>
+<body bgcolor="white">
+<center><h1>302 Found</h1></center>
+<hr><center>nginx/1.10.3</center>
+</body>
+</html>
