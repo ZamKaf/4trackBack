@@ -1,24 +1,132 @@
 from flask import *
 from app import app
+from .database import Database
 
 
-@app.route('/')
-@app.route('/<string:name>/')
-def index(name="world"):
-    return f"Hello {name}!"
+@app.route("/login/", methods=["GET", "POST"])
+def login():
+    # OAuth2
+    pass
 
-@app.route('/form/', methods=['GET', 'POST'])
-def form():
-    if request.method == "GET":
-        return """<html><head></head><body>
-        <form method="POST" action="/form/">
-            <input name="first_name" >
-            <input name="last_name">
-            <input type="submit">
-        </form>
-        </body></html>"""
-    else:
-        rv = jsonify(request.form)
-        return rv
-        print(request.form)
-        abort(404)
+
+@app.route("/api/search_users/", methods=["GET"])
+def search_users():
+
+    args = request.args.to_dict()
+    query = str(args['query'])
+    limit = int(args['limit'])
+
+    resp = jsonify({"users": Database().get_users})
+
+    resp.content_type = 'application/json'
+    resp.status_code = 200
+
+    return resp
+
+
+@app.route("/api/search_chats/", methods=["GET"])
+def search_chats():
+
+    args = request.args.to_dict()
+    query = str(args['query'])
+    limit = int(args['limit'])
+
+    resp = jsonify({"chats": Database().get_chats})
+    resp.content_type = 'application/json'
+    resp.headers['status_code'] = 200
+
+    return resp
+
+
+
+@app.route("/api/list_chats/", methods=["GET"])
+def list_chats():
+
+    resp = jsonify({"chats": Database().get_chats})
+    resp.content_type = 'application/json'
+    resp.headers['status_code'] = 200
+
+    return resp
+
+
+@app.route("/api/create_pers_chat/", methods=["POST"])
+def create_pers_chat():
+    user_id = int(request.args.get('user_id'))
+
+    resp = jsonify({'chat': Database().create_chat(user_id)})
+    resp.status_code = 200
+    resp.content_type = 'application/json'
+
+    return resp
+
+
+@app.route("/api/create_group_chat/", methods=["POST"])
+def create_group_chat():
+    topic = str(request.args.get('topic'))
+    Database().create_group_chat(topic)
+    resp = jsonify({})
+    resp.status_code = 200
+    resp.content_type = 'application/json'
+
+    return resp
+
+
+@app.route("/api/add_members_to_group_chat/", methods=["POST"])
+def add_members_to_group_chat():
+    chat_id = int(request.args.get('chat_id'))
+    user_ids = [int(i) for i in request.args.getlist('user_ids')]
+
+    Database().add_members_to_group_chat(chat_id, user_ids)
+    resp = jsonify({})
+    resp.status_code = 200
+    resp.content_type = 'application/json'
+
+    return resp
+
+
+@app.route("/api/leave_group_chat/", methods=["POST"])
+def leave_group_chat():
+    chat_id = int(request.args.get('chat_id'))
+    #Database
+    resp = jsonify({})
+    resp.status_code = 200
+    resp.content_type = 'application/json'
+
+    return resp
+
+
+@app.route("/api/send_message/", methods=["POST"])
+def send_message():
+    args = request.args.to_dict()
+    chat_id = int(args['chat_id'])
+    content = str(args['content'])
+    attach_id = int(args['attach_id'])
+
+    resp = jsonify({'message': Database().message1})
+    resp.status_code = 200
+    resp.content_type = 'application/json'
+
+    return resp
+
+
+@app.route("/api/read_message/", methods=["GET"])
+def read_message():
+    message_id = int(request.args.get('message_id'))
+    resp = jsonify({'chat': Database().chat1})
+    resp.status_code = 200
+    resp.content_type = 'application/json'
+
+    return resp
+
+
+@app.route("/api/upload_file/", methods=["POST"])
+def upload_file():
+    args = request.args.to_dict()
+    chat_id = args['chat_id']
+    content = args['content']
+
+    resp = jsonify({'attach': Database().attachment1})
+    resp.status_code = 200
+    resp.content_type = 'application/json'
+
+    return resp
