@@ -114,3 +114,6 @@ node_modules/
 
 #vs
 .vs
+
+./app/instance/config.py
+./app/config.py
