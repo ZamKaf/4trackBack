@@ -1,6 +1,21 @@
 from flask import *
-from app import app
+from app import app, jsonrpc
+import json
 from .database import Database
+
+@app.route("/<string:name>")
+@app.route("/")
+def index(name = "world"):
+    return f"Hello, {name}!"
+
+
+@jsonrpc.method('print_name')
+def foo():
+    #return json.dumps("[' Hello' ]")
+    return {"name": "Ivan"}
+#curl -i -X POST -H "Content-type: application/json" --data='{ "jsonrpc": "2.0", "method": "print_name", "params":[], "id": "1"}' http://127.0.0.1:5000/api/
+
+
 
 
 @app.route("/login/", methods=["GET", "POST"])
