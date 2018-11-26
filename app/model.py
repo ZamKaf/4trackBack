@@ -9,8 +9,8 @@ class DbModel:
     def get_chat_ids(self, user_id):
         ids = []
         chats_where_member = self.db.query_all("""
-            SELECT 'ChatId' FROM public."Members"
-            WHERE 'UserId' = '%(user_id)s'
+            SELECT "ChatId" FROM public."Members"
+            WHERE "UserId" = '%(user_id)s'
             """, user_id=int(user_id))
 
         for key, value in chats_where_member.items():
@@ -25,7 +25,7 @@ class DbModel:
         for index, chat_id in enumerate(ids):
             chats.update({index: self.db.query_one("""
             SELECT * FROM public."Chats"
-            WHERE 'ChatId' = '%(chat_id)s'
+            WHERE "ChatId" = '%(chat_id)s'
             LIMIT %(limit)s""", chat_id=chat_id, limit=int(limit))})
         return chats
 
@@ -41,7 +41,7 @@ class DbModel:
         ret = self.db.create("""
             INSERT INTO public."Chats" ("IsGroup", "Topic") 
             VALUES ('false', '')
-            RETURNING 'ChatId'""")
+            RETURNING "Id" """)
         self.db._commit_db()
         return ret
 
@@ -52,19 +52,19 @@ class DbModel:
         if not matches:
             chat_id = self.create_new_chat()
             self.db.insert("""
-            INSERT INTO public."Members" ('UserId', 'ChatId', 'UnreadedMessageCount')
-            VALUES ('%(id1)s', '%(chat_id)s', '0')""", id1=id1, last_id=chat_id)
+            INSERT INTO public."Members" ("UserId", "ChatId", "UnreadedMessageCount")
+            VALUES ('%(id1)s', '%(chat_id)s', '0')""", id1=id1, chat_id=chat_id)
             self.db.insert("""
-            INSERT INTO public."Members" ('UserId', 'ChatId', 'UnreadedMessageCount')
-            VALUES ('%(id2)s','%(chat_id)s', '0')""", id2=id2, last_id=chat_id)
+            INSERT INTO public."Members" ("UserId", "ChatId", "UnreadedMessageCount")
+            VALUES ('%(id2)s','%(chat_id)s', '0')""", id2=id2, chat_id=chat_id)
             self.db._commit_db()
             return 'OK'
         else:
             matches_chat_id = matches[0]
             ret = self.db.query_one("""
             SELECT * FROM public."Chats"
-            WHERE 'ChatId'='%(matches_chat_id)s'
-            AND 'IsGroup'=false""", id=matches_chat_id)
+            WHERE "ChatId"='%(matches_chat_id)s'
+            AND "IsGroup"=false""", id=matches_chat_id)
 
             self.db._commit_db()
             return ret
@@ -73,9 +73,9 @@ class DbModel:
         last_message_id = self.create_new_message(user_id, chat_id, content)
         self.db.execute("""
             UPDATE public."Members"
-            SET 'UnreadMessageCount'='UnreadMessageCount'+1
-            WHERE 'ChatId'='%(chat_id)s'
-            AND 'UserId'<>'%(user_id)s'""", chat_id=chat_id, user_id=user_id)
+            SET "UnreadMessageCount"="UnreadMessageCount"+1
+            WHERE "ChatId"='%(chat_id)s'
+            AND "UserId"<>'%(user_id)s'""", chat_id=chat_id, user_id=user_id)
 
         message = {
             'message_id': last_message_id,
@@ -90,20 +90,20 @@ class DbModel:
     def read(self, user_id, message_id):
         print(message_id)
         target_chat = self.db.query_one("""
-        SELECT 'ChatId' FROM messages
-        WHERE 'Id'='%(message_id)s'""", message_id=message_id)
+        SELECT "ChatId" FROM messages
+        WHERE "Id"='%(message_id)s'""", message_id=message_id)
         chat_id = target_chat['ChatId']
         print(chat_id)
 
         self.db.execute("""
             UPDATE public."Members"
-            SET 'UnreadMessageCount'='UnreadMessageCount'-1
-            WHERE 'ChatId'='%(chat_id)s'
-            AND 'UserId'='%(user_id)s'""", chat_id=chat_id, user_id=user_id)
+            SET "UnreadMessageCount"="UnreadMessageCount"-1
+            WHERE "ChatId"='%(chat_id)s'
+            AND "UserId"='%(user_id)s'""", chat_id=chat_id, user_id=user_id)
 
         res = self.db.query_one("""
-        SELECT * FROM chats
-        WHERE chat_id=%(chat_id)s""", chat_id=chat_id)
+        SELECT * FROM "Chats"
+        WHERE "Id"='%(chat_id)s'""", chat_id=chat_id)
 
         self.db._commit_db()
 

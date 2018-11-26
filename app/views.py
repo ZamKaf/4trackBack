@@ -19,7 +19,7 @@ def foo():
 @app.route("/login/", methods=["GET", "POST"])
 def login():
     model = DbModel()
-    print(model.create_new_chat())
+    print(model.create_chat(1,2))
     # OAuth2
     resp = jsonify({})
     resp.status_code = 200
