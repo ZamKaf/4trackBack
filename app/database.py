@@ -1,66 +1,70 @@
+import flask
+import psycopg2
+from app.instance.config import TestConfig as config
+import psycopg2.extras
+from app import app
+
+
 class Database:
     def __init__(self):
-        self.user1 = {
-            "user_id": 19,
-            "nick": "the.good",
-            "name": "Clint Eastwood",
-            "avatar": "avatars/d9099cd0d3e6cb47fe3a9b0e631901fa.png"
-        }
-        self.user2 = {
-            "user_id": 13,
-            "nick": "the.good.inc",
-            "name": "FeelGood Inc",
-            "avatar": "avatars/d9099cd0d3e6cb47fe3a9b0e631901fa.png"
-        }
-
-        self.chat1 = {
-            "chat_id": 33,
-            "is_group_chat": False,
-            "topic": "Chuck Norris",
-            "last_message": "argh!",
-            "new_messages": 30,
-            "last_read_message_id": 214
-        }
-        self.chat2 = {
-            "chat_id": 50,
-            "is_group_chat": True,
-            "topic": "Broxigar Saurfang",
-            "last_message": "axe!",
-            "new_messages": 130,
-            "last_read_message_id": 2147
-        }
-
-        self.message1 = {
-            "message_id": 200,
-            "chat_id": 33,
-            "user_id": 22,
-            "content": "Hmmm, @chuck.norris",
-            "added_at": 1540198594
-        }
-
-        self.attachment1 = {
-            "attach_id": 1,
-            "message_id": 200,
-            "chat_id": 33,
-            "user_id": 22,
-            "type": "image",
-            "url": "attach/e7ed63c5f815d5b308c9a3720dd1949d.png"
-        }
-
+        self.database = config.DB_NAME
+        self.host = config.DB_HOST
+        self.user = config.DB_USER
+        self.password = config.DB_PASS
+        self.__connection = None
+        flask.got_request_exception.connect(self._rollback_db, app)
+        flask.request_finished.connect(self._commit_db, app)
 
     @property
-    def get_users(self):
-        return [self.user1, self.user2]
+    def connect(self):
+        if not self.__connection:
+            self.__connection = psycopg2.connect(
+                database=self.database, host=self.host,
+                user=self.user, password=self.password)
+
+        return self.__connection
 
     @property
-    def get_chats(self):
-        return [self.chat1, self.chat2]
+    def get_cursor(self):
+        return self.connect.cursor(cursor_factory=psycopg2.extras.DictCursor)
 
-    def create_chat(self, id_):
-        return self.chat1
+    def query_one(self, sql, **params):
+        with self.get_cursor as cur:
+            cur.execute(sql, params)
+            return dict(cur.fetchone())
 
-    def create_group_chat(self, topic):
-        return self.chat2
+    def query_all(self, sql, **params):
+        with self.get_cursor as cur:
+            cur.execute(sql, params)
+            db_response = cur.fetchall()
+            result = {}
+            for index, el in enumerate(db_response):
+                result.update({index: dict(el)})
+            return result
 
-    def add_members_to_group_chat(self, id_, ids):
-        pass
+    def _rollback_db(self, sender, exception, **extra):
+        if not self.__connection:
+            return
+        conn = self.connect
+        conn.rollback()
+        conn.close()
+        self.__connection = None
+
+    def _commit_db(self, sender=None, **extra):
+        if not self.__connection:
+            return
+        conn = self.connect
+        conn.commit()
+        conn.close()
+        self.__connection = None
+
+    def insert(self, sql, **params):
+        with self.get_cursor as cur:
+            cur.execute(sql, params)
+            return True
+
+    def create(self, sql, **params):
+        with self.get_cursor as cur:
+            cur.execute(sql, params)
+            new_id = cur.fetchone()[0]
+            return new_id
