@@ -15,13 +15,28 @@ def foo():
     return {"name": "Ivan"}
 #curl -i -X POST -H "Content-type: application/json" --data='{ "jsonrpc": "2.0", "method": "print_name", "params":[], "id": "1"}' http://127.0.0.1:5000/api/
 
-
-
-
 @app.route("/login/", methods=["GET", "POST"])
+@app.route("/login", methods=["GET", "POST"])
 def login():
-    # OAuth2
-    pass
+    print("here1")
+
+    args = request.args.to_dict()
+    print("here2")
+    login_name = str(args['login'])
+    password = str(args['password'])
+    print("got params")
+    print("login "+login_name)
+    print("pass  " + password)
+    if login_name != 'user' or password != 'user':
+        abort(403)
+
+    #resp = jsonify({"token": "super_token", "data": { "chats": ["Arina", "Oleg", "Boris"] } })
+    resp = jsonify({"token": "super_token"})
+
+    resp.content_type = 'application/json'
+    resp.status_code = 200
+
+    return resp
 
 
 @app.route("/api/search_users/", methods=["GET"])
