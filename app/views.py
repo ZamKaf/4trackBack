@@ -72,7 +72,7 @@ def list_chats():
 def create_pers_chat():
     user_id = int(request.args.get('user_id'))
 
-    resp = jsonify({'chat': Database().create_chat(user_id)})
+    resp = jsonify({"chats": Database().get_chats})
     resp.status_code = 200
     resp.content_type = 'application/json'
 
