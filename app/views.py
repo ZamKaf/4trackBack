@@ -2,6 +2,8 @@ from flask import *
 from wtforms_alchemy import ModelForm
 from flask_restless import APIManager
 from app import app, db, jsonrpc
+from .profiler import profiler
+from .memcache import get_cache_hello
 import json
 from .database import Database
 from .model import DbModel
@@ -32,6 +34,7 @@ def foo():
     return {"name": "Ivan"}
 #curl -i -X POST -H "Content-type: application/json" --data='{ "jsonrpc": "2.0", "method": "print_name", "params":[], "id": "1"}' http://127.0.0.1:5000/api/
 
+
 @app.route("/login/", methods=["GET", "POST"])
 def login():
     model = DbModel()
@@ -45,7 +48,10 @@ def login():
 
 
 @app.route("/api/create_user/", methods=["POST"])
+@profilergi
 def create_user():
+    v = get_cache_hello()
+    print(v)
     print("create_user")
     user = User("", "")
     form = UserForm(request.form)
@@ -70,6 +76,8 @@ def create_user():
 
 @app.route("/api/delete_user/", methods=["POST"])
 def delete_user():
+    v = get_cache_hello()
+    print(v)
     print(f"delete_user")
     nickname = request.form['nick']
 
