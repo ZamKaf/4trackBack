@@ -1,16 +1,23 @@
 from flask import *
 from wtforms_alchemy import ModelForm
+from flask_restless import APIManager
 from app import app, db, jsonrpc
 import json
 from .database import Database
 from .model import DbModel
 
-from app import User
+from .db_classes import *
 
 
 class UserForm(ModelForm):
     class Meta:
         model = User
+
+
+manager = APIManager(app, flask_sqlalchemy_db=db)
+manager.create_api(User)
+manager.create_api(Chat)
+manager.create_api(Attachment)
 
 
 @app.route("/<string:name>")
@@ -52,39 +59,31 @@ def create_user():
     form.populate_obj(user)
     print(f'user name {user.name}')
 
+    db.session.add(user)
+    db.session.commit()
+
     resp = jsonify({})
     resp.status_code = 200
 
     return resp
 
-@app.route("/api/search_users/", methods=["GET"])
-def search_users():
 
-    args = request.args.to_dict()
-    query = str(args['query'])
-    limit = int(args['limit'])
+@app.route("/api/delete_user/", methods=["POST"])
+def delete_user():
+    print(f"delete_user")
+    nickname = request.form['nick']
 
-    resp = jsonify({"users": Database().get_users})
-
+    resp = jsonify({})
     resp.content_type = 'application/json'
+    user = User.query.filter(User.nick == nickname).first()
+    print(user.nick)
+    db.session.delete(user)
+    db.session.commit()
+
+    resp = jsonify({})
     resp.status_code = 200
 
     return resp
-
-
-@app.route("/api/search_chats/", methods=["GET"])
-def search_chats():
-
-    args = request.args.to_dict()
-    query = str(args['query'])
-    limit = int(args['limit'])
-
-    resp = jsonify({"chats": Database().get_chats})
-    resp.content_type = 'application/json'
-    resp.headers['status_code'] = 200
-
-    return resp
-
 
 
 @app.route("/api/list_chats/", methods=["GET"])
@@ -99,7 +98,19 @@ def list_chats():
 
 @app.route("/api/create_pers_chat/", methods=["POST"])
 def create_pers_chat():
-    user_id = int(request.args.get('user_id'))
+    args = request.form
+    user_id1 = args['user_id1']
+    user_id2 = args['user_id2']
+    topic = f"{user_id1}_{user_id2}"
+    chat = Chat(topic, False)
+    db.session.add(chat)
+    db.session.commit()
+
+    mem1 = Member(chat.id, user_id1)
+    mem2 = Member(chat.id, user_id2)
+    db.session.add(mem1)
+    db.session.add(mem2)
+    db.session.commit()
 
     resp = jsonify({"chats": Database().get_chats})
     resp.status_code = 200
@@ -110,8 +121,19 @@ def create_pers_chat():
 
 @app.route("/api/create_group_chat/", methods=["POST"])
 def create_group_chat():
-    topic = str(request.args.get('topic'))
-    Database().create_group_chat(topic)
+    args = request.form
+    user_ids = args['user_ids']
+    topic = args['topic']
+    chat = Chat(topic, False)
+    db.session.add(chat)
+    db.session.commit()
+
+    for user_id in user_ids:
+        mem = Member(chat.id, user_id)
+        db.session.add(mem)
+
+    db.session.commit()
+
     resp = jsonify({})
     resp.status_code = 200
     resp.content_type = 'application/json'
@@ -121,10 +143,14 @@ def create_group_chat():
 
 @app.route("/api/add_members_to_group_chat/", methods=["POST"])
 def add_members_to_group_chat():
-    chat_id = int(request.args.get('chat_id'))
-    user_ids = [int(i) for i in request.args.getlist('user_ids')]
+    args = request.form
+    user_id = args['user_id']
+    chat_id = args['chat_id']
 
-    Database().add_members_to_group_chat(chat_id, user_ids)
+    mem = Member(chat_id, user_id)
+    db.session.add(mem)
+    db.session.commit()
+
     resp = jsonify({})
     resp.status_code = 200
     resp.content_type = 'application/json'
@@ -134,8 +160,13 @@ def add_members_to_group_chat():
 
 @app.route("/api/leave_group_chat/", methods=["POST"])
 def leave_group_chat():
-    chat_id = int(request.args.get('chat_id'))
-    #Database
+    args = request.form
+    user_id = args['user_id']
+    chat_id = args['chat_id']
+    member = Member.query.filter(Member.chat_id == chat_id, Member.user_id == user_id).first()
+    db.session.delete(member)
+    db.session.commit()
+
     resp = jsonify({})
     resp.status_code = 200
     resp.content_type = 'application/json'
@@ -145,10 +176,13 @@ def leave_group_chat():
 
 @app.route("/api/send_message/", methods=["POST"])
 def send_message():
-    args = request.args.to_dict()
-    chat_id = int(args['chat_id'])
-    content = str(args['content'])
-    attach_id = int(args['attach_id'])
+    args = request.form
+    content = args['content']
+    chat_id = args['chat_id']
+    user_id = args['user_id']
+    msg = Message(content, user_id, chat_id)
+    db.session.add(msg)
+    db.session.commit()
 
     resp = jsonify({'message': Database().message1})
     resp.status_code = 200
@@ -159,7 +193,14 @@ def send_message():
 
 @app.route("/api/read_message/", methods=["GET"])
 def read_message():
-    message_id = int(request.args.get('message_id'))
+    args = request.form
+    chat_id = args['chat_id']
+    user_id = args['user_id']
+    message_id = args['message_id']
+    member = Member.query.filter(Member.chat_id == chat_id, Member.user_id == user_id).first()
+    member.last_readed_message = message_id
+    db.session.commit()
+
     resp = jsonify({'chat': Database().chat1})
     resp.status_code = 200
     resp.content_type = 'application/json'
@@ -169,11 +210,20 @@ def read_message():
 
 @app.route("/api/upload_file/", methods=["POST"])
 def upload_file():
-    args = request.args.to_dict()
+    print('upload_file')
+    args = request.form
     chat_id = args['chat_id']
-    content = args['content']
+    user_id = args['user_id']
+    url = args['url']
 
-    resp = jsonify({'attach': Database().attachment1})
+    msg = Message("", user_id, chat_id)
+    db.session.add(msg)
+    db.session.commit()
+    att = Attachment(url, msg.id, chat_id)
+    db.session.add(att)
+    db.session.commit()
+
+    resp = jsonify({})
     resp.status_code = 200
     resp.content_type = 'application/json'
 
