@@ -48,7 +48,7 @@ def login():
 
 
 @app.route("/api/create_user/", methods=["POST"])
-@profilergi
+@profiler
 def create_user():
     v = get_cache_hello()
     print(v)
