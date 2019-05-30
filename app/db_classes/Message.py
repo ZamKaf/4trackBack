@@ -10,6 +10,7 @@ class Message(db.Model):
     attachments = db.relationship('Attachment', backref='message', lazy=True)
 
 
-    def __init__(self, content, user_id):
+    def __init__(self, content, user_id, chat_id):
         self.content = content
         self.user_id = user_id
+        self.chat_id = chat_id

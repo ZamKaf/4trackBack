@@ -1,5 +1,6 @@
 from app import db
 
+
 class Chat(db.Model):
     id = db.Column(db.Integer, unique=True, nullable=False, primary_key=True)
     topic = db.Column(db.String(90), unique=False, nullable=True)

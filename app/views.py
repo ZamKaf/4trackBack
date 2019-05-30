@@ -1,8 +1,15 @@
 from flask import *
-from app import app, jsonrpc
+from wtforms_alchemy import ModelForm
+from app import app, db, jsonrpc
 import json
 from .database import Database
 from .model import DbModel
+
+from app import User
+class UserForm(ModelForm):
+    class Meta:
+        model = User
+
 
 @app.route("/<string:name>")
 @app.route("/")
@@ -27,6 +34,25 @@ def login():
 
     return resp
 
+
+
+@app.route("/api/create_user/", methods=["POST"])
+def create_user():
+    print("create_user")
+    user = User("", "")
+    form = UserForm(request.form)
+    if not form.validate():
+        print("ERROR ERROR")
+        return jsonify({})
+    form.populate_obj(user)
+
+    print(f'user name {user.name}')
+
+    resp = jsonify({})
+    resp.status_code = 200
+    resp.content_type = 'application/json'
+
+    return resp
 
 @app.route("/api/search_users/", methods=["GET"])
 def search_users():
