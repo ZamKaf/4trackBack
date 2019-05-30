@@ -13,8 +13,9 @@ app.config['SQLALCHEMY_DATABASE_URI'] = 'postgres://trackback:trackback@192.168.
 db = SQLAlchemy(app)
 jsonrpc = JSONRPC(app, '/api/')
 
-from . import views
+from .db_classes import *
 
+'''
 class Attachment(db.Model):
     id = db.Column(db.Integer, unique=True, nullable=False, primary_key=True)
     type = db.Column(db.String(90), unique=False, nullable=True)
@@ -83,3 +84,6 @@ class User(db.Model):
     def __init__(self, nick, name):
         self.nick = nick
         self.name = name
+'''
+
+from . import views

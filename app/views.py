@@ -6,6 +6,8 @@ from .database import Database
 from .model import DbModel
 
 from app import User
+
+
 class UserForm(ModelForm):
     class Meta:
         model = User
@@ -35,22 +37,23 @@ def login():
     return resp
 
 
-
 @app.route("/api/create_user/", methods=["POST"])
 def create_user():
     print("create_user")
     user = User("", "")
     form = UserForm(request.form)
+    resp = jsonify({})
+    resp.content_type = 'application/json'
     if not form.validate():
-        print("ERROR ERROR")
-        return jsonify({})
-    form.populate_obj(user)
+        resp = jsonify({})
+        resp.status_code = 400
+        return resp
 
+    form.populate_obj(user)
     print(f'user name {user.name}')
 
     resp = jsonify({})
     resp.status_code = 200
-    resp.content_type = 'application/json'
 
     return resp
 
