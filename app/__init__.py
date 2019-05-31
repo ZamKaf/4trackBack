@@ -9,7 +9,7 @@ from flask_jsonrpc import JSONRPC
 
 app = Flask(__name__)
 app.config.from_object(TestConfig)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'postgres://trackback:trackback@192.168.33.136/tt1'
+app.config['SQLALCHEMY_DATABASE_URI'] = TestConfig.SQLALCHEMY_DATABASE_URI
 db = SQLAlchemy(app)
 jsonrpc = JSONRPC(app, '/api/')
 

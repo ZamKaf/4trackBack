@@ -4,6 +4,7 @@ from app import app, db
 from app.fill_db import *
 from flask_script import Manager
 from flask_migrate import Migrate, MigrateCommand
+from tests.selenium import selenium_tests, selenium_test2
 
 migrate = Migrate(app, db)
 
@@ -22,6 +23,10 @@ def fill_db():
     fill_chat()
     fill_message()
     fill_attachment()
+
+@manager.command
+def selenium():
+    selenium_test2()
 
 
 if __name__ == "__main__":

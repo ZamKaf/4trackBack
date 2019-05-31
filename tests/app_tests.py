@@ -1,6 +1,10 @@
 import unittest
+from mock import patch
+import app.memcache
 from flask import jsonify
-from app import app
+#from app import app
+import app
+
 import json
 from forbiddenfruit import curse
 from app.database import Database
@@ -9,7 +13,7 @@ from app.database import Database
 
 class AppTest(unittest.TestCase):
     def setUp(self):
-        self.app = app.test_client()
+        self.app = app.app.test_client()
         self.code = 200
         self.type = 'application/json'
 
@@ -21,20 +25,14 @@ class AppTest(unittest.TestCase):
         self.assertEqual(self.code, rv.status_code)
         self.assertEqual(self.type,  rv.mimetype)
 
-    def test_search_users(self):
-        rv = self.app.get(f'/api/search_users/?query="qq"&limit=12')
-        self.common_asserts(rv)
-        self.assertTrue(rv.data.decode('utf-8')
-                        .json_compare({"users": Database().get_users}))
+    def test_create_user(self):
+        with patch('app.memcache.get_cache_hello') as cache_mock:
+            cache_mock.return_value = "underworld"
+            app.memcache.just4test()
+            #test_nick = 'test_nick'
+            #self.app.post('/api/delete_user/', data={'nick':test_nick})
 
-
-    def test_search_chats(self):
-        rv = self.app.get(f'/api/search_chats/?query="qq"&limit=12')
-        self.common_asserts(rv)
-        self.assertTrue(rv.data.decode('utf-8')
-                        .json_compare({"chats": Database().get_chats}))
-        #rv.data
-
+'''
     def test_list_chats(self):
         rv = self.app.get(f'/api/list_chats/')
         self.common_asserts(rv)
@@ -82,6 +80,8 @@ class AppTest(unittest.TestCase):
         self.common_asserts(rv)
         self.assertTrue(rv.data.decode('utf-8')
                         .json_compare({'attach': Database().attachment1}))
+        
+'''
 
 def json_compare(self, other_json):
     """
