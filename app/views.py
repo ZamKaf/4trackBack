@@ -1,4 +1,5 @@
 from flask import *
+from .memcache import cache
 from wtforms_alchemy import ModelForm
 from flask_restless import APIManager
 from app import app, db, jsonrpc
@@ -20,6 +21,23 @@ manager = APIManager(app, flask_sqlalchemy_db=db)
 manager.create_api(User)
 manager.create_api(Chat)
 manager.create_api(Attachment)
+
+
+@app.route("/api/get_all_messages/", methods=["GET"])
+def get_all_messages():
+    all_messages = cache.get('all_messages')
+    if all_messages is None:
+        print('SET CACHE all_messages')
+        all_messages = Message.query.all()
+        cache.set('all_messages', all_messages, timeout=5 * 60)
+
+    for msg in all_messages:
+        print(msg)
+
+    resp = jsonify({})
+    resp.status_code = 200
+
+    return resp
 
 
 @app.route("/<string:name>")
@@ -84,6 +102,10 @@ def delete_user():
     resp = jsonify({})
     resp.content_type = 'application/json'
     user = User.query.filter(User.nick == nickname).first()
+    if user is None:
+        resp = jsonify({})
+        resp.status_code = 400
+        return resp
     print(user.nick)
     db.session.delete(user)
     db.session.commit()
@@ -109,6 +131,9 @@ def create_pers_chat():
     args = request.form
     user_id1 = args['user_id1']
     user_id2 = args['user_id2']
+    User.query.get_or_404(user_id1)
+    User.query.get_or_404(user_id2)
+
     topic = f"{user_id1}_{user_id2}"
     chat = Chat(topic, False)
     db.session.add(chat)
@@ -137,6 +162,7 @@ def create_group_chat():
     db.session.commit()
 
     for user_id in user_ids:
+        User.query.get_or_404(user_id)
         mem = Member(chat.id, user_id)
         db.session.add(mem)
 
@@ -154,6 +180,8 @@ def add_members_to_group_chat():
     args = request.form
     user_id = args['user_id']
     chat_id = args['chat_id']
+    User.query.get_or_404(user_id)
+    Chat.query.get_or_404(chat_id)
 
     mem = Member(chat_id, user_id)
     db.session.add(mem)
@@ -171,7 +199,7 @@ def leave_group_chat():
     args = request.form
     user_id = args['user_id']
     chat_id = args['chat_id']
-    member = Member.query.filter(Member.chat_id == chat_id, Member.user_id == user_id).first()
+    member = Member.query.filter(Member.chat_id == chat_id, Member.user_id == user_id).first_or_404()
     db.session.delete(member)
     db.session.commit()
 
@@ -188,6 +216,9 @@ def send_message():
     content = args['content']
     chat_id = args['chat_id']
     user_id = args['user_id']
+    User.query.get_or_404(user_id)
+    Chat.query.get_or_404(chat_id)
+
     msg = Message(content, user_id, chat_id)
     db.session.add(msg)
     db.session.commit()
@@ -205,7 +236,7 @@ def read_message():
     chat_id = args['chat_id']
     user_id = args['user_id']
     message_id = args['message_id']
-    member = Member.query.filter(Member.chat_id == chat_id, Member.user_id == user_id).first()
+    member = Member.query.filter(Member.chat_id == chat_id, Member.user_id == user_id).first_or_404()
     member.last_readed_message = message_id
     db.session.commit()
 
@@ -222,6 +253,8 @@ def upload_file():
     args = request.form
     chat_id = args['chat_id']
     user_id = args['user_id']
+    User.query.get_or_404(user_id)
+    Chat.query.get_or_404(chat_id)
     url = args['url']
 
     msg = Message("", user_id, chat_id)

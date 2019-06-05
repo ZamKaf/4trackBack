@@ -1,3 +1,5 @@
+import time
+
 from selenium.webdriver import Firefox
 from selenium.webdriver.firefox.options import Options
 
@@ -11,6 +13,7 @@ def selenium_test2():
     assert "Python" in driver.title
     elem = driver.find_element_by_name("q")
     elem.send_keys("pycon")
+    time.sleep(5)
     elem.send_keys(Keys.RETURN)
     assert "No results found." not in driver.page_source
     driver.quit()

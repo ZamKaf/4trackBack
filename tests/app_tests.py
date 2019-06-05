@@ -27,8 +27,10 @@ class AppTest(unittest.TestCase):
 
     def test_create_user(self):
         with patch('app.memcache.get_cache_hello') as cache_mock:
-            cache_mock.return_value = "underworld"
-            app.memcache.just4test()
+            word = "underworld"
+            cache_mock.return_value = word
+
+            self.assertEqual(app.memcache.just4test(), word)
             #test_nick = 'test_nick'
             #self.app.post('/api/delete_user/', data={'nick':test_nick})
 

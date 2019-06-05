@@ -9,5 +9,6 @@ def get_cache_hello():
         cache.set('hello', rv, timeout=5*60)
     return  rv
 
+
 def just4test():
-    print(get_cache_hello())
+    return get_cache_hello()
